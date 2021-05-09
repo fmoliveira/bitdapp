@@ -3,7 +3,11 @@ import { ethers } from "ethers";
 
 import Greeter from "./artifacts/contracts/Greeter.sol/Greeter.json";
 
-const greeterAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+// localhost
+// const greeterAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+
+// ropsten
+const greeterAddress = "0xdC743fb62977B1b3b69459CA9797CDB01e733c31";
 
 declare global {
   var ethereum: ethers.providers.ExternalProvider;
