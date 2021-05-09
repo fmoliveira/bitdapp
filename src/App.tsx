@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ethers } from "ethers";
 
 import Greeter from "./artifacts/contracts/Greeter.sol/Greeter.json";
+import Token from "./artifacts/contracts/Token.sol/Token.json";
 
 // localhost
 const greeterAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -16,12 +17,39 @@ declare global {
 
 function App() {
   const [greeting, setGreetingValue] = useState("");
+  const [userAccount, setUserAccount] = useState("");
+  const [amount, setAmount] = useState(0);
 
   async function requestAccount() {
     if (typeof window.ethereum === "undefined") return;
     if (!window.ethereum.request) return;
 
     await window.ethereum.request({ method: "eth_requestAccounts" });
+  }
+
+  async function getBalance() {
+    if (typeof window.ethereum === "undefined") return;
+    if (!window.ethereum.request) return;
+
+    const [account] = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(tokenAddress, Token.abi, provider);
+    const balance = await contract.balanceOf(account);
+    console.log("Balance:", balance.toString());
+  }
+
+  async function sendCoins() {
+    if (typeof window.ethereum === "undefined") return;
+
+    await requestAccount();
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(tokenAddress, Token.abi, signer);
+    const transaction = await contract.transfer(userAccount, amount);
+    await transaction.wait();
+    console.log(`Sent ${amount} coins to ${userAccount}`);
   }
 
   async function fetchGreeting() {
@@ -55,15 +83,33 @@ function App() {
   }
 
   return (
-    <div style={{ display: "flex", gap: 10 }}>
-      <button onClick={fetchGreeting}>Fetch Greeting</button>
-      <button onClick={setGreeting}>Set Greeting</button>
-      <input
-        type="text"
-        placeholder="New greeting"
-        onChange={(event) => setGreetingValue(event.target.value)}
-        value={greeting}
-      />
+    <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={fetchGreeting}>Fetch Greeting</button>
+        <button onClick={setGreeting}>Set Greeting</button>
+        <input
+          type="text"
+          placeholder="New greeting"
+          onChange={(ev) => setGreetingValue(ev.target.value)}
+          value={greeting}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={getBalance}>Get Balance</button>
+        <button onClick={sendCoins}>Send Coins</button>
+        <input
+          type="text"
+          placeholder="Account ID"
+          onChange={(ev) => setUserAccount(ev.target.value)}
+          value={userAccount}
+        />
+        <input
+          type="text"
+          placeholder="Amount"
+          onChange={(ev) => setAmount(Number.parseInt(ev.target.value, 10))}
+          value={amount}
+        />
+      </div>
     </div>
   );
 }
